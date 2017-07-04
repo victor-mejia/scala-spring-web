@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Getting Started: Serving Web Content</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+<div>
+    <div id="examDeatails" >
+        <p id="examComplete">You have answered all the questions!!!!!</p>
+        <p id="examImplete">You haven't answered all the questions!!!! </p>
+    </div>
+    <div>
+        <form action='#' th:action="@{'/exam/' + ${examId} + '/question/' + ${lastQuestionId}}" method="get">
+            <input type="submit" value="Back"/>
+        </form>
+        <input type="button" value="Finish"/>
+    </div>
+    <div id="finalGrade">
+        <p></p>
+    </div>
+</div>
+</body>
+</html>

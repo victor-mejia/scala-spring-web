@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>The exam has started!!!!!!</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+<div>
+    <div id="examDeatails" >
+        <h1 th:text="${userFullName} + ' you have started the test ' + ${exam.name}"/>
+        <p th:text="${exam.description}" />
+        <p th:text="'You need ' + ${exam.passScore} + ' correct responses to pass the test'" />
+    </div>
+    <div>
+        <select id="question">
+            <option value="1" >Question 1</option>
+            <option value="2" selected="selected" >Question 2</option>
+            <option value="3" >Question 3</option>
+            <option value="4" >Question 4</option>
+            <option value="5" >Question 5</option>
+        </select>
+        <div>
+            <p>The path of the righteous man is beset on all sides by the iniquities of the selfish and the tyranny of evil men. Blessed is he who, in the name of charity and good will, shepherds the weak through the valley of darkness, for he is truly his brother's keeper and the finder of lost children. And I will strike down upon thee with great vengeance and furious anger those who would attempt to poison and destroy My brothers. And you will know My name is the Lord when I lay My vengeance upon thee.</p>
+        </div>
+    </div>
+    <div>
+        <input type="button" value="Next" />
+        <input type="button" value="Prev" />
+        <form action='#' th:action="@{'/exam/' + ${exam.name} + '/status'}" method="get" >
+            <input type="submit" value="Finish" />
+        </form>
+    </div>
+</div>
+<script th:inline="javascript">
+    var questions = [[${questions}]];
+    var currentQuestion = [[${currentQuestion}]];
+    console.log(questions);
+    console.log(currentQuestion)
+</script>
+</body>
+</html>
