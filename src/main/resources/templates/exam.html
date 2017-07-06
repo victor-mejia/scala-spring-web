@@ -7,8 +7,8 @@
 <body>
 <div>
     <div id="examDeatails" >
-        <h1 th:text="${userFullName} + ' you have started the test ' + ${exam.name}"/>
-        <p th:text="${exam.description}" />
+        <h1 th:text="${userFullName} + ' you have started the test ' + ${examDesc.name}"/>
+        <p th:text="${examDesc.description}" />
         <p th:text="'You need ' + ${exam.passScore} + ' correct responses to pass the test'" />
     </div>
     <div>
@@ -26,7 +26,7 @@
     <div>
         <input type="button" value="Next" />
         <input type="button" value="Prev" />
-        <form action='#' th:action="@{'/exam/' + ${exam.name} + '/status'}" method="get" >
+        <form action='#' th:action="@{'/exam/' + ${exam.id} + '/status'}" method="get" >
             <input type="submit" value="Finish" />
         </form>
     </div>

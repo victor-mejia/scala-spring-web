@@ -8,8 +8,11 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation._
+import spring.scala.exception.{ExamDetailsNotFoundException, ExamNotFoundException, ExamOrQuestionNotFoundExeption}
 import spring.scala.model._
 import spring.scala.services.ExamService
+
+import scala.util.{Failure, Success}
 
 @Controller
 @RequestMapping(path = Array("/exam"))
@@ -18,83 +21,98 @@ class ExamController @Autowired() (val examService: ExamService) {
   @GetMapping(produces = Array("text/html"))
   def getExamDetails(model: Model): String = {
 
-    model.addAttribute("user", new User)
+    model.addAttribute("user", new User) //TODO Remove this replace it with security principal
 
-    examService.getExamDescription()
-      .map(examDetails => model.addAttribute("examDetails", examDetails))
-      .map(_ => "home")
-      .getOrElse("notFound")
+    examService.getExamDescription() match {
+      case Some(examDetails) => model.addAttribute("examDetails", examDetails)
+      case None => throw new ExamDetailsNotFoundException
+    }
+    "home"
   }
 
   @PostMapping()
   def createExam(@ModelAttribute user: User, model: Model): String = {
-    val examId = 123;
-    s"redirect:/exam/${examId}"
+
+    examService.createExam(user) match {
+      case Success(examId) => s"redirect:/exam/${examId}"
+      case Failure(error) => throw error
+    }
   }
 
-  @GetMapping(path = Array("/{id}"), produces = Array("text/html"))
-  def getExam(@PathVariable id: String, model: Model): String = {
+  @GetMapping(path = Array("/{examId}"), produces = Array("text/html"))
+  def getExam(@PathVariable examId: Long, model: Model): String = {
 
-    setExamToModel(id, "1", model)
-
+    examService.getExam(examId) match {
+      case Some(exam) =>  setExamToModel(exam, 1, model)
+      case None => throw new ExamNotFoundException
+    }
     "exam"
   }
 
-  @GetMapping(path = Array("{id}/status"), produces = Array("text/html"))
-  def getStatus(@PathVariable id: String, model: Model) : String = {
-    val status = ExamStatus(3,1600,new Date, false)
+  @GetMapping(path = Array("{examId}/status"), produces = Array("text/html"))
+  def getStatus(@PathVariable examId: Long, model: Model) : String = {
 
-    model.addAttribute("status", status)
-    model.addAttribute("examId", id)
-    model.addAttribute("lastQuestionId", 5)
-
+    lazy val lastQuestionId = examService.questionsByExamSort(examId).last.id
+    examService.getExamStatus(examId) match {
+      case Some(status) => {
+        model.addAttribute("status", status)
+        model.addAttribute("examId", examId)
+        model.addAttribute("lastQuestionId", lastQuestionId)
+      }
+    }
     "endExam"
   }
 
-  @GetMapping(path = Array("{id}/status.json"), produces = Array("text/html"))
-  def getStatus(@PathVariable id: String) : ResponseEntity[ExamStatus] = {
-    val status = ExamStatus(3,1600,new Date, false)
+  @GetMapping(path = Array("{examId}/status.json"), produces = Array("text/html"))
+  def getStatus(@PathVariable examId: Long) : ResponseEntity[ExamStatus] = {
 
-    ResponseEntity.ok(status)
+    examService.getExamStatus(examId) match {
+      case Some(status) => ResponseEntity.ok(status)
+      case None => throw new ExamNotFoundException
+    }
   }
 
-  @GetMapping(path = Array("/{id}/question/{questionId}"), produces = Array("text/html"))
-  def getExam(@PathVariable id: String, @PathVariable questionId: String, model: Model): String = {
-    setExamToModel(id,questionId,model)
+  @GetMapping(path = Array("/{examId}/question/{questionId}"), produces = Array("text/html"))
+  def getExam(@PathVariable examId: Long, @PathVariable questionId: Long, model: Model): String = {
+
+    examService.getExam(examId) match {
+      case Some(exam) if (examService.validQuestion(exam,questionId)) => setExamToModel(exam,questionId,model)
+      case None => throw new ExamOrQuestionNotFoundExeption
+    }
     "exam"
   }
 
-  @PostMapping(path = Array("/{id}/question/{questionId}/answer"), consumes = Array("application/json"))
-  def saveAnswer(@PathVariable id: Int, @PathVariable questionId: Int, @RequestBody answersJson : String):ResponseEntity[Boolean] = {
-    ResponseEntity.ok(true)
+  @PostMapping(path = Array("/{examId}/question/{questionId}/answer"), consumes = Array("application/json"))
+  def saveAnswer(@PathVariable examId: Long, @PathVariable questionId: Long, @RequestBody answersJson : String):ResponseEntity[Boolean] = {
+
+    val answers: Seq[Answer] = ??? // TODO answersJson map to array of answers
+
+    examService.saveAnswers(examId,questionId,answers) match {
+      case Success(_) => ResponseEntity.ok(true)
+      case Failure(error) => throw error
+    }
   }
 
-  @PostMapping(path = Array("/{id}/finish"), produces = Array("application/json"))
-  def endExam(): ResponseEntity[ExamGrade] = {
-    val examGrade = ExamGrade(1,1,7, true)
-    ResponseEntity.ok(examGrade)
+  @PostMapping(path = Array("/{examId}/finish"), produces = Array("application/json"))
+  def endExam(examId: Long): ResponseEntity[ExamGrade] = {
+
+    examService.endExam(examId) match {
+      case Success(examGrade) => ResponseEntity.ok(examGrade)
+      case Failure(error) => throw error
+    }
   }
 
-
-  private def setExamToModel(examId: String, currentQuestion: String, model: Model) = {
-    println("Getting questions for exam " + examId)
-    val exam = new ExamDescription(1,"Exam1", " This is the exam basic level", 6, 10, 3600)
-
-    val questionsList = List(
-      Question(1,1,"Question 1", "Problem 1", false, 1),
-      Question(2,1,"Question 1", "Problem 1", false, 2),
-      Question(3,1,"Question 1", "Problem 1", false, 3),
-      Question(4,1,"Question 1", "Problem 1", false, 4),
-      Question(5,1,"Question 1", "Problem 1", false, 5));
-
+  private def setExamToModel(exam: Exam, currentQuestion: Long, model: Model): Unit = {
+    println("Getting questions for exam " + exam.id)
+    val examDesc = exam.examDesc
+    val questionsList = examService.questionsByExamSort(exam.id)
     val gson = new Gson()
-
     val questions: String = gson.toJson(questionsList)
 
+    model.addAttribute("examDesc", examDesc)
     model.addAttribute("exam", exam)
     model.addAttribute("userFullName", "Victor Mejia")
     model.addAttribute("questions", questions)
     model.addAttribute("currentQuestion", currentQuestion)
-
   }
 }

@@ -21,7 +21,6 @@ case class ExamDescription(@(Id @field) @(GeneratedValue @field) @BeanProperty i
                @BeanProperty durationSec: Long) {
 
   def this() = this(null,null,null,null,null,null)
-
 }
 
 @Entity
@@ -41,7 +40,7 @@ case class ChoiseAswer(@(Id @field) @BeanProperty id: Long,
 
 @Entity
 case class Exam(@(Id @field) @(GeneratedValue @field) @BeanProperty id: Long,
-                @BeanProperty examDesc: Long,
+                @BeanProperty examDesc: ExamDescription,
                 @BeanProperty user: String,
                 @BeanProperty startTime: Date,
                 @BeanProperty endTime: Date)
