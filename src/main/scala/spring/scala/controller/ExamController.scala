@@ -1,14 +1,12 @@
 package spring.scala.controller
 
-import java.util.Date
-
 import com.google.gson.Gson
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation._
-import spring.scala.exception.{ExamDetailsNotFoundException, ExamNotFoundException, ExamOrQuestionNotFoundExeption}
+import spring.scala.exception.{ExamDescriptionNotFoundException, ExamNotFoundException, ExamOrQuestionNotFoundExeption}
 import spring.scala.model._
 import spring.scala.services.ExamService
 
@@ -25,7 +23,7 @@ class ExamController @Autowired() (val examService: ExamService) {
 
     examService.getExamDescription() match {
       case Some(examDetails) => model.addAttribute("examDetails", examDetails)
-      case None => throw new ExamDetailsNotFoundException
+      case None => throw ExamDescriptionNotFoundException
     }
     "home"
   }
@@ -44,7 +42,7 @@ class ExamController @Autowired() (val examService: ExamService) {
 
     examService.getExam(examId) match {
       case Some(exam) =>  setExamToModel(exam, 1, model)
-      case None => throw new ExamNotFoundException
+      case None => throw ExamNotFoundException
     }
     "exam"
   }
@@ -52,14 +50,19 @@ class ExamController @Autowired() (val examService: ExamService) {
   @GetMapping(path = Array("{examId}/status"), produces = Array("text/html"))
   def getStatus(@PathVariable examId: Long, model: Model) : String = {
 
-    lazy val lastQuestionId = examService.questionsByExamSort(examId).last.id
-    examService.getExamStatus(examId) match {
-      case Some(status) => {
-        model.addAttribute("status", status)
-        model.addAttribute("examId", examId)
-        model.addAttribute("lastQuestionId", lastQuestionId)
-      }
+    lazy val lastQuestionId = examService.questionsByExamSort(examId).map(_.last.id)
+
+    def setModel(status: ExamStatus) = {
+      model.addAttribute("lastQuestionId", lastQuestionId.get)
+      model.addAttribute("status", status)
+      model.addAttribute("examId", examId)
     }
+
+    examService.getExamStatus(examId) match {
+      case Some(status) => setModel(status)
+      case None => throw ExamNotFoundException
+    }
+
     "endExam"
   }
 
@@ -68,7 +71,7 @@ class ExamController @Autowired() (val examService: ExamService) {
 
     examService.getExamStatus(examId) match {
       case Some(status) => ResponseEntity.ok(status)
-      case None => throw new ExamNotFoundException
+      case None => throw ExamNotFoundException
     }
   }
 
@@ -77,7 +80,7 @@ class ExamController @Autowired() (val examService: ExamService) {
 
     examService.getExam(examId) match {
       case Some(exam) if (examService.validQuestion(exam,questionId)) => setExamToModel(exam,questionId,model)
-      case None => throw new ExamOrQuestionNotFoundExeption
+      case None => throw ExamOrQuestionNotFoundExeption
     }
     "exam"
   }
@@ -104,7 +107,8 @@ class ExamController @Autowired() (val examService: ExamService) {
 
   private def setExamToModel(exam: Exam, currentQuestion: Long, model: Model): Unit = {
     println("Getting questions for exam " + exam.id)
-    val examDesc = exam.examDesc
+
+    val examDesc = examService.getExamDescription().getOrElse(null)
     val questionsList = examService.questionsByExamSort(exam.id)
     val gson = new Gson()
     val questions: String = gson.toJson(questionsList)

@@ -39,11 +39,11 @@ case class ChoiseAswer(@(Id @field) @BeanProperty id: Long,
                        @BeanProperty correct: Boolean)
 
 @Entity
-case class Exam(@(Id @field) @(GeneratedValue @field) @BeanProperty id: Long,
-                @BeanProperty examDesc: ExamDescription,
+case class Exam(@(Id @field) @(GeneratedValue @field) @BeanProperty id: Long = null,
+                @BeanProperty examDescId: Long,
                 @BeanProperty user: String,
-                @BeanProperty startTime: Date,
-                @BeanProperty endTime: Date)
+                @BeanProperty startTime: Date = new Date,
+                @BeanProperty endTime: Date = null)
 
 @Entity
 case class Answer(@(Id @field) @(GeneratedValue @field) @BeanProperty id: Long,
