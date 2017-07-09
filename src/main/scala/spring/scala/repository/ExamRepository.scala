@@ -13,7 +13,9 @@ trait QuestionRespository extends CrudRepository[Question,Long] {
   def findByExamDesc(examDesc: Long): Iterable[Question]
 }
 
-trait ChoiseAswerRepository extends CrudRepository[ChoiseAswer,Long]
+trait ChoiseAswerRepository extends CrudRepository[ChoiceAnswer,Long] {
+  def findByQuestion(question: Long): Iterable[ChoiceAnswer]
+}
 
 trait ExamRepository extends CrudRepository[Exam,Long]
 

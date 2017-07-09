@@ -32,11 +32,11 @@ case class Question(@(Id @field) @BeanProperty id: Long,
                     @BeanProperty ord: Int)
 
 @Entity
-case class ChoiseAswer(@(Id @field) @BeanProperty id: Long,
-                       @BeanProperty question: Long,
-                       @BeanProperty text: String,
-                       @BeanProperty ord: Int,
-                       @BeanProperty correct: Boolean)
+case class ChoiceAnswer(@(Id @field) @BeanProperty id: Long,
+                        @BeanProperty question: Long,
+                        @BeanProperty text: String,
+                        @BeanProperty ord: Int,
+                        @BeanProperty correct: Boolean)
 
 @Entity
 case class Exam(@(Id @field) @(GeneratedValue @field) @BeanProperty id: Long = null,
@@ -49,7 +49,7 @@ case class Exam(@(Id @field) @(GeneratedValue @field) @BeanProperty id: Long = n
 case class Answer(@(Id @field) @(GeneratedValue @field) @BeanProperty id: Long,
                   @BeanProperty exam: Long,
                   @BeanProperty question: Long,
-                  @BeanProperty choiseAswer: Long)
+                  @BeanProperty choiceAswer: Long)
 
 @Entity
 case class ExamGrade(@(Id @field) @(GeneratedValue @field) @BeanProperty id: Long,

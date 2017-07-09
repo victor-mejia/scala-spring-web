@@ -10,6 +10,8 @@ import spring.scala.exception.{ExamDescriptionNotFoundException, ExamNotFoundExc
 import spring.scala.model._
 import spring.scala.services.ExamService
 
+import java.lang.Long
+
 import scala.util.{Failure, Success}
 
 @Controller
@@ -86,11 +88,11 @@ class ExamController @Autowired() (val examService: ExamService) {
   }
 
   @PostMapping(path = Array("/{examId}/question/{questionId}/answer"), consumes = Array("application/json"))
-  def saveAnswer(@PathVariable examId: Long, @PathVariable questionId: Long, @RequestBody answersJson : String):ResponseEntity[Boolean] = {
+  def saveAnswer(@PathVariable examId: Long, @PathVariable questionId: Long, @RequestBody choiseAnswerJson : String):ResponseEntity[Boolean] = {
 
-    val answers: Seq[Answer] = ??? // TODO answersJson map to array of answers
+    val choiceAnswers: Seq[Long] = ??? // TODO answersJson map to array of answers
 
-    examService.saveAnswers(examId,questionId,answers) match {
+    examService.saveAnswers(examId,questionId,choiceAnswers) match {
       case Success(_) => ResponseEntity.ok(true)
       case Failure(error) => throw error
     }
